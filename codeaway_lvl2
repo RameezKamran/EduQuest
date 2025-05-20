@@ -1,0 +1,180 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace EduQuestFinal
+{
+    public partial class level2 : Form
+    {
+        private string username;
+        int movesMade = 0; int moveLimit = 9;
+        int playerX = 0, playerY = 0;
+        int gridSize = 5;
+        int cellSize = 60;
+        bool[,] obstacles = new bool[5, 5];
+
+        public level2(string username)
+        {
+            InitializeComponent();
+            this.username = username;
+        }
+
+        private void level2_Load(object sender, EventArgs e)
+        {
+            panelGameGrid.Paint += DrawGrid;
+            panelGameGrid.Invalidate();
+
+
+            obstacles[1, 0] = true;
+            obstacles[1, 1] = true;
+            obstacles[2, 3] = true;
+            obstacles[3, 1] = true;
+        }
+
+        private void DrawGrid(object sender, PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            Pen pen = new Pen(Color.Black);
+            Brush playerBrush = new SolidBrush(Color.Blue);
+            Brush goalBrush = new SolidBrush(Color.Green);
+            Brush obstacleBrush = new SolidBrush(Color.Red);
+
+            for (int y = 0; y < gridSize; y++)
+            {
+                for (int x = 0; x < gridSize; x++)
+                {
+                    Rectangle cell = new Rectangle(x * cellSize, y * cellSize, cellSize, cellSize);
+                    g.DrawRectangle(pen, cell);
+
+                    if (obstacles[y, x])
+                        g.FillRectangle(obstacleBrush, cell);
+
+                    if (x == playerX && y == playerY) // starting position hai
+                        g.FillEllipse(playerBrush, cell);
+
+                    if (x == gridSize - 1 && y == gridSize - 1) // destination point hai
+                        g.FillRectangle(goalBrush, cell);
+                }
+            }
+
+
+
+        }
+
+        private void ResetPlayer()
+        {
+            playerX = 0;
+            playerY = 0;
+            movesMade = 0;
+        }
+
+        private void moveRight()
+        {
+
+            if (movesMade >= moveLimit)
+            {
+                MessageBox.Show("❌ Move limit reached! Returning to start.");
+                ResetPlayer(); return;
+            }
+
+            if (playerX < gridSize - 1)
+            {
+                playerX++;
+                movesMade++;
+            }
+
+            lblmoves.Text = $"Moves: {movesMade}/{moveLimit}";
+            panelGameGrid.Invalidate();
+
+        }
+        private void moveLeft()
+        {
+            if (movesMade >= moveLimit)
+            {
+                MessageBox.Show("❌ Move limit reached! Returning to start.");
+                ResetPlayer(); return;
+            }
+            if (playerX > 0) { playerX--; movesMade++; }
+
+            lblmoves.Text = $"Moves: {movesMade}/{moveLimit}";
+            panelGameGrid.Invalidate();
+        }
+
+        private void moveUp()
+        {
+            if (movesMade >= moveLimit)
+            {
+                MessageBox.Show("❌ Move limit reached! Returning to start.");
+                ResetPlayer(); return;
+            }
+            if (playerY > 0) { playerY--; movesMade++; }
+
+            lblmoves.Text = $"Moves: {movesMade}/{moveLimit}";
+            panelGameGrid.Invalidate();
+        }
+        private void moveDown()
+        {
+            if (movesMade >= moveLimit)
+            {
+                MessageBox.Show("❌ Move limit reached! Returning to start.");
+                ResetPlayer(); return;
+            }
+            if (playerY < gridSize - 1) { playerY++; movesMade++; }
+
+            lblmoves.Text = $"Moves: {movesMade}/{moveLimit}";
+            panelGameGrid.Invalidate();
+        }
+
+        private void btnRunCode_Click_1(object sender, EventArgs e)
+        {
+
+            string[] lines = rtbCodeEditor.Text.Split(new[] { '\n', ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var line in lines)
+            {
+                string trimmed = line.Trim().ToLower();
+                if (trimmed.Contains("right()"))
+                    moveRight();
+                else if (trimmed.Contains("down()"))
+                    moveDown();
+                else if (trimmed.Contains("up()"))
+                    moveUp();
+                else if (trimmed.Contains("left()"))
+                    moveLeft();
+                else { MessageBox.Show("invalid command!"); }
+
+            }
+            panelGameGrid.Invalidate();
+            CheckGoal();
+        }
+
+        private void lblStatus_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            selectlevel form = new selectlevel(username);
+            form.Show();
+            this.Close();
+        }
+
+        private void CheckGoal()
+        {
+            if (playerX == gridSize - 1 && playerY == gridSize - 1)
+               { MessageBox.Show("🎯 You reached the goal!");
+                button1.Visible = true;
+            }
+            else
+                lblStatus.Text = "Keep going!";
+        }
+
+    }
+}
