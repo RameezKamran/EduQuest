@@ -1,0 +1,290 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static System.Windows.Forms.AxHost;
+
+namespace EduQuestFinal
+{
+
+
+    public partial class Form9 : Form
+    {
+        private int countdowntime = 60;
+        private int remainingtime = 0;
+        private int StartX = 12; 
+        private int StartY = 162;
+        private int finishLineX = 750;
+
+        private int totalDistance => finishLineX - StartX;
+
+        string[] typeTexts = new string[]
+{
+    "The quick brown fox jumps over the lazy dog",
+    "In a distant future humanity has colonized Mars\n under domes made of transparent alloy",
+    "Artificial intelligence is transforming every\n industry making tasks more accessible to people around world",
+    "the waves of the Pacific Ocean colorful\n coral reefs teem with life from sea turtles",
+    "hiking through the ancient forest she stumbled\n a moss-covered stone carved\n with runes of forgotten language",
+    "The city lights shimmered like stars below as pilot\n guided the plane through turbulent night sky",
+    "old clock struck midnight the library books seemed\n to whisper secrets of\n adventures waiting to be rediscovered",
+    "Coding is not just about writing lines of syntax but about\n solving problems building systems\nbringing ideas to life",
+    "orchestra played with such emotion that even stars\n outside theater seemed to\n listen in silent awe",
+    "He never expected a simple walk in park would lead to\n meeting someone who would change\n course of his life"
+    };
+
+        
+        private bool raceStarted = false;
+        private string targetText;
+        Label finishLine = new Label();
+
+        private void ResetForNextSentence()
+        {
+            // Reset car position
+            picCar.Location = new Point(StartX, StartY);
+            picCar.Size = new Size(60, 30);
+
+            // Clear user input
+            txtUserInput.Text = "";
+
+            // Pick a new sentence
+            Random rnd = new Random();
+            int index = rnd.Next(typeTexts.Length);
+            targetText = typeTexts[index];
+            richTextBox1.Text = targetText;
+
+            // Keep input enabled
+            txtUserInput.Enabled = true;
+            txtUserInput.Focus();
+        }
+
+        private void SaveBestAccuracyToDb()
+        {
+            string connStr = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\ramee\Documents\mydb.accdb";
+            using (var conn = new System.Data.OleDb.OleDbConnection(connStr))
+            {
+                conn.Open();
+
+                // Check if user exists
+                string checkSql = "SELECT COUNT(*) FROM UserStats WHERE Username = ?";
+                using (var checkCmd = new System.Data.OleDb.OleDbCommand(checkSql, conn))
+                {
+                    checkCmd.Parameters.AddWithValue("?", username);
+                    int exists = (int)checkCmd.ExecuteScalar();
+
+                    if (exists > 0)
+                    {
+                        // Update only if new accuracy is better
+                        string updateSql = "UPDATE UserStats SET BestAccuracy = ? WHERE Username = ? AND BestAccuracy < ?";
+                        using (var updateCmd = new System.Data.OleDb.OleDbCommand(updateSql, conn))
+                        {
+                            updateCmd.Parameters.AddWithValue("?", bestAccuracy);
+                            updateCmd.Parameters.AddWithValue("?", username);
+                            updateCmd.Parameters.AddWithValue("?", bestAccuracy);
+                            updateCmd.ExecuteNonQuery();
+                        }
+                    }
+                    else
+                    {
+                        // Insert new user
+                        string insertSql = "INSERT INTO UserStats (Username, BestAccuracy) VALUES (?, ?)";
+                        using (var insertCmd = new System.Data.OleDb.OleDbCommand(insertSql, conn))
+                        {
+                            insertCmd.Parameters.AddWithValue("?", username);
+                            insertCmd.Parameters.AddWithValue("?", bestAccuracy);
+                            insertCmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        public void Func()
+        {
+
+            finishLine.BorderStyle = BorderStyle.FixedSingle;
+            finishLine.BackColor = Color.Red;
+            finishLine.Size = new Size(4, 100);
+            finishLine.Location = new Point(finishLineX, 360);
+
+            picCar.Location = new Point(StartX, StartY);
+            picCar.Size = new Size(60, 30);
+        }
+
+        private void ResetRace()
+        {
+
+            picCar.Location = new Point(StartX, StartY);
+            picCar.Size = new Size(60, 30);
+
+            txtUserInput.Text = "";
+
+            lblResult.Text = "";
+
+ 
+            remainingtime = countdowntime;
+            lblTimer.Text = $"Time Left: {remainingtime}s";
+
+            Random rnd = new Random();
+            int index = rnd.Next(typeTexts.Length);
+            targetText = typeTexts[index];
+            richTextBox1.Text = targetText;
+        }
+
+        private string username;
+        private double bestAccuracy = 0.0;
+
+        public Form9(string username)
+        {
+            InitializeComponent();
+            this.username = username;
+            Func();
+            this.Controls.Add(finishLine);
+        }
+
+        private void Form9_Load(object sender, EventArgs e)
+        {
+            this.StartPosition = FormStartPosition.CenterScreen;
+
+            Random rnd = new Random();
+            int index = rnd.Next(typeTexts.Length);
+            targetText = typeTexts[index];
+            richTextBox1.Text = targetText;
+            richTextBox1.ReadOnly = true;
+            richTextBox1.BackColor = Color.White;
+            richTextBox1.BorderStyle = BorderStyle.None;
+
+            
+
+            this.Size = new Size(818,489);
+            this.MaximumSize = new Size(818, 489);
+            this.MinimumSize = new Size(818, 489);
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+
+            timer1.Tick -= timer1_Tick;
+            timer1.Tick += timer1_Tick;
+            timer1.Interval = 1000;
+        }
+
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+
+            txtUserInput.Text = "";
+            txtUserInput.Enabled = true;
+            txtUserInput.Focus();
+            remainingtime = countdowntime; 
+            lblTimer.Text = $"Time Left: {remainingtime}s";
+            raceStarted = true;
+            timer1.Start();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (remainingtime > 0)
+            {
+                remainingtime--;
+                lblTimer.Text = $"Time Left: {remainingtime}s";
+
+
+                // Remove spaces and newlines from both strings
+                string filteredTarget = new string(targetText.Where(c => !char.IsWhiteSpace(c)).ToArray());
+                string filteredInput = new string(txtUserInput.Text.Where(c => !char.IsWhiteSpace(c)).ToArray());
+
+                // Calculate progress based on number of typed non-space characters
+                int typedChars = Math.Min(filteredInput.Length, filteredTarget.Length);
+
+                double progressRatio = (double)typedChars / filteredTarget.Length;
+                int newX = StartX + (int)(progressRatio * totalDistance);
+                picCar.Location = new Point(newX, picCar.Location.Y);
+
+                if (remainingtime == 0)
+                {
+                    timer1.Stop();
+                    raceStarted = false;
+                    txtUserInput.Enabled = false;
+                    MessageBox.Show("Time's up!");
+                    CalculateResults();
+                    SaveBestAccuracyToDb();
+                    return;
+                }
+
+                string userInput = txtUserInput.Text;
+
+                if (filteredInput.Length >= filteredTarget.Length)
+                {
+                    CalculateResults();
+                    ResetForNextSentence();
+                }
+
+            }
+
+
+        }
+
+
+        private void CalculateResults()
+        {
+            int wordCount = targetText.Split(' ').Length;
+            double minutes = (60.0 - remainingtime) / 60.0;
+            double wpm = minutes > 0 ? wordCount / minutes : wordCount;
+
+            int correctChars = txtUserInput.Text.Zip(targetText, (a, b) => a == b ? 1 : 0).Sum();
+            double accuracy = 100.0 * correctChars / targetText.Length;
+
+            // Update bestAccuracy if this is better
+            if (accuracy > bestAccuracy)
+                bestAccuracy = accuracy;
+
+            lblResult.Text = $"🏁 WPM: {wpm:F1}, Accuracy: {accuracy:F1}%";
+        }
+
+
+        private void btnEnd_Click(object sender, EventArgs e)
+        {
+            if (!raceStarted) return;
+
+            timer1.Stop();
+            raceStarted = false;
+            txtUserInput.Enabled = false;
+            CalculateResults();
+
+            
+        }
+
+        private void txtUserInput_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void picCar_Click(object sender, EventArgs e)
+        {
+            
+            
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Form10 form = new Form10(username);
+            form.Show();
+            this.Close();
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            ResetRace();
+            Func();
+        }
+    }
+}
