@@ -1,0 +1,56 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace EduQuestFinal
+{
+    public partial class leaderboard : Form
+    {
+        public leaderboard(string username)
+        {
+           this.username = username;
+            InitializeComponent();
+        }
+
+        private string username;
+        private void leaderboard_Load(object sender, EventArgs e)
+        {
+            this.StartPosition = FormStartPosition.CenterScreen;
+
+            string connStr = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\ramee\Documents\mydb.accdb";
+            string query = "SELECT Username, BestAccuracy FROM UserStats ORDER BY BestAccuracy DESC";
+
+            using (var conn = new System.Data.OleDb.OleDbConnection(connStr))
+            {
+                var adapter = new System.Data.OleDb.OleDbDataAdapter(query, conn);
+                var ds = new DataSet();
+                adapter.Fill(ds, "Leaderboard");
+
+                dataGridView1.DataSource = ds.Tables["Leaderboard"];
+            }
+
+            // Disable editing and stretch columns
+            dataGridView1.ReadOnly = true;
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            button1.Text = "Back";
+            Form10 form = new Form10(username);
+            form.Show();
+            this.Close();
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+    }
+}
