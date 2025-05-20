@@ -1,0 +1,259 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Header;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
+using System.Data.OleDb;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using System.Media;
+
+
+namespace EduQuestFinal
+{
+    public partial class Form7 : Form
+    {
+        private string username;
+         int timeLeft = 15;
+        int score = 0, currentQuestionIndex = 0;
+        DateTime startTime = DateTime.Now;
+        DateTime endTime;
+        List<Question> questions = new List<Question>();
+        string connectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\ramee\Documents\mydb.accdb;";
+
+        private void PlayCorrectSound()
+        {
+            SoundPlayer player = new SoundPlayer(@"C:\Users\ramee\Downloads\correct.wav");
+            player.Play();
+        }
+
+        private void PlayIncorrectSound()
+        {
+            SoundPlayer player = new SoundPlayer(@"C:\\Users\\ramee\\Downloads\\incorrect.wav");
+            player.Play();
+        }
+
+ 
+        public Form7(string username)
+        {
+            InitializeComponent();
+            LoadQuestions();
+            DisplayQuestion();
+            this.username = username;
+        }
+
+
+        private void SaveScore(string username, int score, double timeTakenSeconds)
+        {
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            {
+
+                conn.Open();
+
+                string query = "INSERT INTO CodingChallengedb (Username, score, timetaken) VALUES (?, ?, ?)";
+                using (OleDbCommand cmd = new OleDbCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("?", username);
+                    cmd.Parameters.AddWithValue("?", score);
+                    cmd.Parameters.AddWithValue("?", timeTakenSeconds);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+
+                conn.Close();
+            }
+        }
+
+        private void LoadQuestions()
+        {
+            questions.Add(new Question("Inheritance shows ___ relation: ", "is-a", new string[] { "is-a", "has-a", "is-are", "has-are" }));
+            questions.Add(new Question("Operator Overloading is an example of: ", "Polymorphism", new string[] { "Encapsulation", "Friend Class", "Polymorphism", "Inheritance" }));
+            questions.Add(new Question("What is the Time Complexity of in-built sort?", "O(nlogn)", new string[] { "O(n)", "O(n^2)", "O(logn)", "O(nlogn)" }));
+            questions.Add(new Question("This method is used to make directly move object location:", "move()", new string[] { "move()", "copy()", "to_string()", "emplace_back()" }));
+            questions.Add(new Question("Composition is a __ relation", "has-a", new string[] { "is-a", "has-a", "is-are", "has-are" }));
+        }
+
+        private void DisplayQuestion()
+        {
+            
+            if (currentQuestionIndex < questions.Count)
+            {
+                var q = questions[currentQuestionIndex];
+                lblQuestion.Text = q.Text;
+                rbtnA.Text = q.Choices[0];
+                rbtnB.Text = q.Choices[1];
+                rbtnC.Text = q.Choices[2];
+                rbtnD.Text = q.Choices[3];
+
+                rbtnA.Checked = false;
+                rbtnB.Checked = false;
+                rbtnC.Checked = false;
+                rbtnD.Checked = false;
+
+                timer1.Stop();
+                timeLeft = 15; 
+                lblTimer.Text = $"Time Left: {timeLeft}";
+                timer1.Start(); 
+
+            }
+            else
+            {
+                TimeSpan timeTaken = DateTime.Now - startTime;
+                double tt = timeTaken.TotalSeconds;
+                lblQuestion.Text = $"Quiz finished!\nYour score: {score}/{questions.Count} Time: {Math.Round(tt, 2)} seconds";
+                btnSubmit.Enabled = false;
+                timer1.Stop();
+                btnSubmit.Hide();
+                rbtnA.Hide(); rbtnB.Hide(); rbtnC.Hide(); rbtnD.Hide();
+                lblTimer.Hide();
+
+                SaveScore(username, score, tt);
+            }
+        }
+
+
+        public class Question
+        {
+            public string Text { get; set; }
+            public string CorrectAnswer { get; set; }
+            public string[] Choices { get; set; }
+
+            public Question(string text, string correctAnswer, string[] choices)
+            {
+                Text = text;
+                CorrectAnswer = correctAnswer;
+                Choices = choices;
+            }
+        }
+
+
+        private void lblQuestion_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
+        private void timer1_Tick_1(object sender, EventArgs e)
+        {
+            timeLeft-=1;
+
+            if (timeLeft <= 0)
+            {
+                timer1.Stop();
+                lblTimer.Text = "Time Left: 0";
+                MessageBox.Show("Time's up!");
+                currentQuestionIndex++;
+                DisplayQuestion();
+
+            }
+            else
+            {
+                lblTimer.Text = $"Time Left: {timeLeft}";
+            }
+        }
+
+
+
+        private void btnSubmit_Click_1(object sender, EventArgs e)
+        {
+            button2.Show();
+            lblQuestion.Visible = true;
+            score = 0;
+            currentQuestionIndex = 0;
+            timeLeft = 15;
+            startTime = DateTime.Now;
+
+            DisplayQuestion();
+
+            rbtnA.Show(); rbtnB.Show(); rbtnC.Show(); rbtnD.Show();
+            rbtnA.Enabled = true; rbtnB.Enabled = true; rbtnC.Enabled = true; rbtnD.Enabled = true;
+            btnSubmit.Enabled = true;
+            btnSubmit.Show();
+            lblTimer.Show();
+        }
+
+        private void lblTimer_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Form5 form = new Form5(username);
+            form.Show(); this.Close();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            timer1.Stop();
+            TimeSpan timeTaken = DateTime.Now - startTime;
+            double tt = timeTaken.TotalSeconds;
+            lblQuestion.Text = $"Quiz finished!\nYour score: {score}/{questions.Count} Time: {Math.Round(tt, 2)} seconds";
+            btnSubmit.Enabled = false;
+            btnSubmit.Hide();
+            rbtnA.Hide(); rbtnB.Hide(); rbtnC.Hide(); rbtnD.Hide();
+            lblTimer.Hide();
+
+            SaveScore(username, score, tt);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (!rbtnA.Checked && !rbtnB.Checked && !rbtnC.Checked && !rbtnD.Checked)
+            {
+                MessageBox.Show("Please select an answer before submitting.");
+                timer1.Start();
+                return;
+            }
+
+            timer1.Stop();
+            string selectedAnswer = "";
+            if (rbtnA.Checked) selectedAnswer = rbtnA.Text;
+            else if (rbtnB.Checked) selectedAnswer = rbtnB.Text;
+            else if (rbtnC.Checked) selectedAnswer = rbtnC.Text;
+            else if (rbtnD.Checked) selectedAnswer = rbtnD.Text;
+
+            if (selectedAnswer == questions[currentQuestionIndex].CorrectAnswer)
+            {
+
+                PlayCorrectSound();
+                score++;
+                MessageBox.Show("Correct Answer!!!");
+                timer1.Stop();
+                timeLeft = 15;
+                lblTimer.Text = $"Time Left: {timeLeft}";
+                timer1.Start();
+
+            }
+
+            else
+            {
+                PlayIncorrectSound(); MessageBox.Show("Incorrect Answer!!!");
+                timer1.Stop();
+                timeLeft = 15;
+                lblTimer.Text = $"Time Left: {timeLeft}";
+                timer1.Start();
+            }
+
+            currentQuestionIndex++;
+            DisplayQuestion();
+
+        }
+
+        private void Form7_Load(object sender, EventArgs e)
+        {
+            rbtnA.Hide(); rbtnB.Hide(); rbtnC.Hide(); rbtnD.Hide();
+            button2.Hide();
+            lblTimer.Hide();
+            btnSubmit.Show();
+
+        }
+
+    }
+}
