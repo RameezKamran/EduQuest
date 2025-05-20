@@ -7,72 +7,46 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace EduQuestFinal
 {
-    public partial class Form4 : Form
+    public partial class FormBrainTeaserGame : Form
     {
-        public string username;
-        public Form4(string str)
+        private string username;
+  
+        
+        public FormBrainTeaserGame(string username)
         {
             InitializeComponent();
-            username = str;
+            this.username = username;
             this.StartPosition = FormStartPosition.CenterScreen;
-
+           
         }
 
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            startgame form = new startgame(username);
+            form.Show(); this.Close();
+        }
 
-        private void label1_Click(object sender, EventArgs e)
+        private void FormBrainTeaserGame_Load(object sender, EventArgs e)
         {
 
         }
+  
+       
 
-
-        private void codingchallenge_Click(object sender, EventArgs e)
+        private void button2_Click(object sender, EventArgs e)
         {
-            Form5 form = new Form5(username);
-            this.Hide();
-            form.Show();
-            codingchallenge.FlatStyle = FlatStyle.Flat;
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
+            Form4 form = new Form4(username);
+            form.Show(); this.Close();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            selectlevel form = new selectlevel(username);
-            form.Show();
-            this.Close();
+            brainteaserleaderboard form = new brainteaserleaderboard(username);
+            form.Show(); this.Close();
         }
-
-        private void typemonk_Click(object sender, EventArgs e)
-        {
-            Form10 form = new Form10(username);
-            form.Show();
-            this.Close();
-        }
-
-        private void Form4_Load(object sender, EventArgs e)
-        {
-            label2.Text = username;
-            label2.ForeColor = Color.Black;
-            label2.Location = new Point(430, 282);
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void brainteaser_Click(object sender, EventArgs e)
-        {
-            FormBrainTeaserGame nayaform = new FormBrainTeaserGame(username);
-            nayaform.Show();
-            this.Close();
-        }
-
     }
 }
