@@ -1,0 +1,49 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace EduQuestFinal
+{
+    public partial class Form10 : Form
+    {
+        private string username;
+        public Form10(string username)
+        {
+            InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.username = username;
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Form4 form = new Form4(username);
+            form.Show();
+            this.Close();
+        }
+
+        private void btnEnd_Click(object sender, EventArgs e)
+        {
+            Form9 form = new Form9(username);
+            form.Show(); this.Close();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            leaderboard form = new leaderboard(username);
+            form.Show();
+            this.Close();
+        }
+
+        private void Form10_Load(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
